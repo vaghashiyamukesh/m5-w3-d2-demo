@@ -1,38 +1,126 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+.page-shell {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  padding: 28px 16px;
+  background: #ececec;
+}
+
+.book-card {
+  max-width: 980px;
+  min-height: 640px;
+  margin: 0 auto;
+  border: 2px solid #1462a7;
+  background: #f6f6f6;
+  padding: 24px;
+}
+
+.add-book-btn {
+  margin-bottom: 18px;
+}
+
+.page-title {
+  margin: 0 0 20px;
+  font-size: 44px;
+  font-weight: 500;
+  color: #202020;
+}
+
+.status-text {
+  margin-top: 16px;
+  color: #444;
+}
+
+.error-text {
+  margin-top: 12px;
+  color: #b32d2d;
+}
+
+.table-book-list {
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+
+.table-book-list thead th {
+  font-size: 32px;
+  font-weight: 700;
+  color: #202020;
+  border-bottom: 2px solid #8b8b8b;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.table-book-list tbody td {
+  font-size: 36px;
+  color: #303030;
+  vertical-align: middle;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.action-row {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 8px;
 }
 
-.App-link {
-  color: #61dafb;
+.edit-btn {
+  background: #2bc0da;
+  color: #112;
+  border-color: #2bc0da;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.edit-btn:hover,
+.edit-btn:focus {
+  background: #22abc2;
+  border-color: #22abc2;
+}
+
+.delete-btn {
+  background: #efc11a;
+  color: #202020;
+  border-color: #efc11a;
+}
+
+.delete-btn:hover,
+.delete-btn:focus {
+  background: #ddb213;
+  border-color: #ddb213;
+}
+
+.book-form {
+  max-width: 100%;
+}
+
+.form-label-large {
+  font-size: 20px;
+  font-weight: 600;
+  color: #202020;
+}
+
+.book-form .form-control {
+  height: 42px;
+  border-radius: 2px;
+}
+
+.empty-row {
+  text-align: center;
+  color: #555;
+}
+
+@media (max-width: 900px) {
+  .book-card {
+    min-height: auto;
+    padding: 16px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .page-title {
+    font-size: 34px;
+  }
+
+  .table-book-list thead th {
+    font-size: 22px;
+  }
+
+  .table-book-list tbody td {
+    font-size: 22px;
   }
 }

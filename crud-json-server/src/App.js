@@ -1,102 +1,157 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Lists from "./Lists";
 import CreateList from "./CreateList";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./App.css";
 
-class App extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        loading: false,
-        alldata: [],
-        singledata: {
-          title: "",
-          author: ""
-        }
-      };
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5001/api/books";
+
+function App() {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [view, setView] = useState("list");
+  const [editingBook, setEditingBook] = useState(null);
+
+  const isFormView = useMemo(() => view === "create" || view === "edit", [view]);
+
+  const getLists = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch(API_BASE_URL);
+      if (!response.ok) {
+        throw new Error("Unable to fetch books");
+      }
+
+      const result = await response.json();
+      setBooks(result);
+    } catch (err) {
+      setError(err.message || "Unexpected error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getLists();
+  }, []);
+
+  const createList = async (data) => {
+    const response = await fetch(API_BASE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("Unable to create book");
     }
 
-    getLists = () => { 
-      this.setState({ loading: true });
-      fetch("http://localhost:5000/posts")
-        .then(response => response.json())
-        .then(result => {
-          this.setState({ alldata: result, loading: false });
-        })
-        .catch(err => {
-          console.log(err);
-          this.setState({ loading: false });
-        });
+    await getLists();
+    setView("list");
+  };
+
+  const updateList = async (id, data) => {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("Unable to update book");
     }
 
-    createList = (data) => {
-      fetch("http://localhost:5000/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-        .then(response => response.json())
-        .then(result => {
-          console.log("List created:", result);
-          this.getLists();
-        })
-        .catch(err => console.log(err));
+    await getLists();
+    setEditingBook(null);
+    setView("list");
+  };
+
+  const deleteList = async (id) => {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Unable to delete book");
     }
 
-    updateList = (id, data) => {
-      fetch(`http://localhost:5000/posts/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-        .then(response => response.json())
-        .then(result => {
-          console.log("List updated:", result);
-          this.getLists();
-        })
-        .catch(err => console.log(err));
+    await getLists();
+  };
+
+  const handleCreate = async (payload) => {
+    try {
+      setError("");
+      await createList(payload);
+    } catch (err) {
+      setError(err.message || "Unexpected error");
+    }
+  };
+
+  const handleUpdate = async (payload) => {
+    if (!editingBook) {
+      return;
     }
 
-    deleteList = (id) => {
-      fetch(`http://localhost:5000/posts/${id}`, {
-        method: "DELETE"
-      })
-        .then(response => response.json())
-        .then(result => {
-          console.log("List deleted:", result);
-          this.getLists();
-        })
-        .catch(err => console.log(err));
+    try {
+      setError("");
+      await updateList(editingBook.id, payload);
+    } catch (err) {
+      setError(err.message || "Unexpected error");
     }
+  };
 
-    render() {
-      const listTable = this.state.loading ? (
-        <span>Loading...</span>
-      ) : (
-        <Lists 
-          alldata={this.state.alldata}
-          onUpdate={this.updateList}
-          onDelete={this.deleteList}
-        />
-      );
-      return (
-        <div className="container mt-4">
-            <div className="mb-3">
-              <button 
-                className="btn btn-primary me-2" 
-                onClick={this.getLists}>
-                  Get Lists
-              </button>
-              <CreateList onAdd={this.createList} />
-            </div>
-            {listTable}
-        </div>
-      )
+  const handleDelete = async (id) => {
+    try {
+      setError("");
+      await deleteList(id);
+    } catch (err) {
+      setError(err.message || "Unexpected error");
     }
-  }
+  };
+
+  return (
+    <main className="page-shell">
+      <section className="book-card">
+        {isFormView ? (
+          <CreateList
+            heading={view === "edit" ? "Update Book" : "Add Book"}
+            submitLabel={view === "edit" ? "Save" : "Save"}
+            initialValues={editingBook || { title: "", author: "" }}
+            onSubmit={view === "edit" ? handleUpdate : handleCreate}
+            onCancel={() => {
+              setEditingBook(null);
+              setView("list");
+            }}
+          />
+        ) : (
+          <>
+            <button className="btn btn-primary add-book-btn" onClick={() => setView("create")}>
+              Add Book
+            </button>
+            <h1 className="page-title">Book List</h1>
+            {loading ? <p className="status-text">Loading books...</p> : null}
+            {error ? <p className="error-text">{error}</p> : null}
+            {!loading ? (
+              <Lists
+                alldata={books}
+                onUpdate={(book) => {
+                  setEditingBook(book);
+                  setView("edit");
+                }}
+                onDelete={handleDelete}
+              />
+            ) : null}
+          </>
+        )}
+      </section>
+    </main>
+  );
+}
 
 export default App;

@@ -1,70 +1,70 @@
-import React, { useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
-import "bootstrap/dist/css/bootstrap.min.css";
+import React, { useEffect, useState } from "react";
 
-function CreateList(props) {
-  const [show, setShow] = useState(false);
+function CreateList({ heading, submitLabel, initialValues, onSubmit, onCancel }) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
+  const [error, setError] = useState("");
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  useEffect(() => {
+    setTitle(initialValues?.title || "");
+    setAuthor(initialValues?.author || "");
+    setError("");
+  }, [initialValues]);
 
-  const handleSubmit = () => {
-    if (title.trim() && author.trim()) {
-      props.onAdd({ title, author });
-      setTitle("");
-      setAuthor("");
-      handleClose();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!title.trim() || !author.trim()) {
+      setError("Both fields are required");
+      return;
+    }
+
+    try {
+      setError("");
+      await onSubmit({ title: title.trim(), author: author.trim() });
+    } catch (err) {
+      setError(err.message || "Unable to save book");
     }
   };
 
   return (
-    <>
-      <Button 
-        variant="primary" 
-        onClick={handleShow}
-        className="me-2"
-      >
-        Create New List
-      </Button>
-
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Add New List</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Author</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter author"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Add List
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </>
+    <div>
+      <h1 className="page-title">{heading}</h1>
+      <form className="book-form" onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label htmlFor="title" className="form-label form-label-large">
+            Book Title
+          </label>
+          <input
+            id="title"
+            type="text"
+            className="form-control"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+        </div>
+        <div className="mb-3">
+          <label htmlFor="author" className="form-label form-label-large">
+            Author
+          </label>
+          <input
+            id="author"
+            type="text"
+            className="form-control"
+            value={author}
+            onChange={(event) => setAuthor(event.target.value)}
+          />
+        </div>
+        {error ? <p className="error-text">{error}</p> : null}
+        <div className="d-flex gap-2 mt-4">
+          <button type="submit" className="btn btn-primary">
+            {submitLabel}
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
